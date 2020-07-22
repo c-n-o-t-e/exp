@@ -1,4 +1,4 @@
-Timport { Service, Inject } from 'typedi';
+import { Service, Inject } from 'typedi';
 import config from '../config';
 import { EventDispatcher, EventDispatcherInterface } from '../decorators/eventDispatcher';
 import events from '../subscribers/events';
