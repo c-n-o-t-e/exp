@@ -79,7 +79,8 @@ export default class EnsExpirationChannel {
                             let date = ethers.utils.formatUnits(expiredDate,0).split('.')[0];
 
                             let currentDate = (new Date().getTime()- new Date().getMilliseconds())/1000;
-if(date - currentDate > 30443906){
+                            
+                            if(date - currentDate > 30443906){
                               
                               let txPromise = epnsContractWithSigner.sendMessage(usersAddress, parseInt(payload.data.type), ipfshash, 1);
                                   
