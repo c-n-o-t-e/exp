@@ -1,4 +1,4 @@
-import { Service, Inject } from 'typedi';
+Timport { Service, Inject } from 'typedi';
 import config from '../config';
 import { EventDispatcher, EventDispatcherInterface } from '../decorators/eventDispatcher';
 import events from '../subscribers/events';
@@ -58,11 +58,11 @@ export default class EnsExpirationChannel {
               let fromBlock = 0
               
               epnsContract.queryFilter(filter, fromBlock)
-                .then(r => {
+                .then(eventLog => {
 
-                    for (let i = 0; i < r.length ;i++) {
+                    for (let i = 0; i < eventLog.length ;i++) {
 
-                      let usersAddress = r[i].args.user;
+                      let usersAddress = eventLog[i].args.user;
 
                       provider.lookupAddress(usersAddress)
                       .then(ensAddressName => {
