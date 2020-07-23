@@ -82,7 +82,7 @@ export default class EnsExpirationChannel {
                             
                             if(date - currentDate > 30443906){
                               
-                              let txPromise = epnsContractWithSigner.sendMessage(usersAddress, parseInt(payload.data.type), ipfshash, 1);
+                              let txPromise = epnsContractWithSigner.sendMessage(eventLog[i].args.user, parseInt(payload.data.type), ipfshash, 1);
                                   
                               txPromise
                                 .then(function(tx) {
