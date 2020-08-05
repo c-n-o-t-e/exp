@@ -20,7 +20,8 @@ export default class EnsExpirationChannel {
   ) {}
   
   // To form and write to smart contract
-  public async getExpiredAddress() {
+  getNewMessage() {}
+  public async sendMessageToContract() {
 
     const logger = this.logger;
 
@@ -31,16 +32,17 @@ export default class EnsExpirationChannel {
         .then(payload => {
 
           const jsonisedPayload = JSON.stringify(payload);
-
-          // handle payloads, etc
+          
           const ipfs = require("nano-ipfs-store").at("https://ipfs.infura.io:5001");
           ipfs.add(jsonisedPayload)
             .then(ipfshash => {
-
-              const web3 = new Web3(config.infuraId);
               
-              const provider = new ethers.providers.InfuraProvider('ropsten');
+              
+              const web3 = new Web3(config.infuraId);
 
+             
+              const provider = new ethers.providers.InfuraProvider('ropsten');
+              
               let wallet = new ethers.Wallet(config.ensTickerPrivateKey, provider);
               
               let epnsContract = new ethers.Contract(config.deployedContract, config.deployedContractABI, provider);
@@ -60,9 +62,22 @@ export default class EnsExpirationChannel {
               epnsContract.queryFilter(filter, fromBlock)
                 .then(eventLog => {
 
-                    for (let i = 0; i < eventLog.length ;i++) {
+                  let whiteList = [  '0x4F3BDE9380AEDA90C8A6724AF908bb5a2fac7f54'];
+                	let addressCount;
+                  let address;
+                  let oneDay = 86400;
+                  let twoDays = 172800;
+                  let threeDays = 259200;
+                  let sevenDays = 604800;
+                  let eightyEightDays = 7603200;
+                  let eightyNineDays = 7689600;
+                  let nintyDays = 7776000;
 
-                      let usersAddress = eventLog[i].args.user;
+                	for (let i = 0; i < eventLog.length ;i++) {
+                    	
+                      let usersAddress = eventLog[0].args.user;
+
+                      
 
                       provider.lookupAddress(usersAddress)
                       .then(ensAddressName => {
@@ -77,13 +92,28 @@ export default class EnsExpirationChannel {
                           .then(expiredDate => {
 
                             let date = ethers.utils.formatUnits(expiredDate,0).split('.')[0];
-
+                            
                             let currentDate = (new Date().getTime()- new Date().getMilliseconds())/1000;
                             
-                            if(date - currentDate > 30443906){
+                          if(date - currentDate < threeDays ){     
+                            if(whiteList.includes(eventLog[i].args.user)){}
+                            else if (!whiteList.includes(eventLog[i].args.user)){
+                            	let txPromise = epnsContractWithSigner.sendMessage(eventLog[i].args.user, parseInt(payload.data.type), ipfshash, 1);
                               
-                              let txPromise = epnsContractWithSigner.sendMessage(eventLog[i].args.user, parseInt(payload.data.type), ipfshash, 1);
-                                  
+                              txPromise
+                                .then(function(tx) {
+                                  logger.info("Transaction sent: %o", tx);
+                                  whiteList.push(eventLog[i].args.user)
+                                  resolve({ success: 1, data: tx });
+                                })
+                                  .catch(err => {
+                                    reject("Unable to complete transaction, error: %o", err)
+                                    throw err;
+                                  });}
+                          }
+
+                          if(date - currentDate < twoDays ){
+                            let txPromise = epnsContractWithSigner.sendMessage(eventLog[i].args.user, parseInt(payload.data.type), ipfshash, 1);
                               txPromise
                                 .then(function(tx) {
                                   logger.info("Transaction sent: %o", tx);
@@ -93,7 +123,76 @@ export default class EnsExpirationChannel {
                                     reject("Unable to complete transaction, error: %o", err)
                                     throw err;
                                   });
-                            }
+                          } 
+                          
+                          if(date - currentDate < oneDay ){     
+                            let txPromise = epnsContractWithSigner.sendMessage(eventLog[i].args.user, parseInt(payload.data.type), ipfshash, 1);
+                              txPromise
+                                .then(function(tx) {
+                                  logger.info("Transaction sent: %o", tx);
+                                  resolve({ success: 1, data: tx });
+                                })
+                                  .catch(err => {
+                                    reject("Unable to complete transaction, error: %o", err)
+                                    throw err;
+                                  });
+                          } 
+                          
+                          if(date - currentDate < eightyEightDays){     
+                            let txPromise = epnsContractWithSigner.sendMessage(eventLog[i].args.user, parseInt(payload.data.type), ipfshash, 1);
+                              txPromise
+                                .then(function(tx) {
+                                  logger.info("Transaction sent: %o", tx);
+                                  resolve({ success: 1, data: tx });
+                                })
+                                  .catch(err => {
+                                    reject("Unable to complete transaction, error: %o", err)
+                                    throw err;
+                                  });
+                          }        
+                          
+                          if(date - currentDate < eightyNineDays){     
+                            let txPromise = epnsContractWithSigner.sendMessage(eventLog[i].args.user, parseInt(payload.data.type), ipfshash, 1);
+                              txPromise
+                                .then(function(tx) {
+                                  logger.info("Transaction sent: %o", tx);
+                                  resolve({ success: 1, data: tx });
+                                })
+                                  .catch(err => {
+                                    reject("Unable to complete transaction, error: %o", err)
+                                    throw err;
+                                  });
+                          }                 
+
+                          if(date - currentDate < nintyDays){     
+                            let txPromise = epnsContractWithSigner.sendMessage(eventLog[i].args.user, parseInt(payload.data.type), ipfshash, 1);
+                              txPromise
+                                .then(function(tx) {
+                                  logger.info("Transaction sent: %o", tx);
+                                  resolve({ success: 1, data: tx });
+                                })
+                                  .catch(err => {
+                                    reject("Unable to complete transaction, error: %o", err)
+                                    throw err;
+                                  });
+                          } 
+                           //checks if address is included in whiteList array
+                          if(whiteList.includes(eventLog[i].args.user)){}
+                          else if (!whiteList.includes(eventLog[i].args.user)){whiteList.push(eventLog[i].args.user)}
+                          
+                          //if address has been renewed remove from whiteList
+                          if(date > sevenDays ){
+                                	address = usersAddress;
+		                            for (let r = 0; r < whiteList.length; r++) {
+		                    		if(whiteList[r] === address){
+                              addressCount = r;
+		                    	 } 
+		                    	}
+		                    }
+
+		                    if(whiteList[addressCount] === eventLog[i].args.user){
+                            	whiteList.splice(addressCount, 1);}	
+                            
                           })
                       })
                     }
@@ -112,16 +211,16 @@ export default class EnsExpirationChannel {
     });
   }
  
-  public async getNewMessage() {
-      const logger = this.logger;
-      logger.debug('Preparing message...');
+	public async getNewMessage() {
+			const logger = this.logger;
+			logger.debug('Preparing message...');
 
          return await new Promise((resolve, reject) => {
-           const title = "k";
-          const message = "m";
+ 		      const title = "ENS Name Expiration";
+          const message = "7 days to expiration";
 
-          const payloadTitle = "o";
-          const payloadMsg = "y";
+          const payloadTitle = "Your ENS name is about to expire";
+          const payloadMsg = "Dear user, your ENS will be expiring in 7 days kindly click on this write up for a guide on how to renew your ENS name";
 
           const payload = {
             "notification": {
@@ -129,11 +228,11 @@ export default class EnsExpirationChannel {
               "body": message
             },
             "data": {
-              "type": "1", // Group Message
+              "type": "3", 
               "secret": "",
               "asub": payloadTitle,
               "amsg": payloadMsg,
-              "acta": "",
+              "acta": "https://medium.com/the-ethereum-name-service/the-great-renewal-its-time-to-renew-your-eth-names-or-else-lose-them-afccea4852cb",
               "aimg": ""
             }
           };
